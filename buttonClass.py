@@ -55,7 +55,7 @@ class Tile(Button1):
         "dark brown": "#838a5a",
     }
 
-    def __init__(self, root, row, column, text, len, wid, maxrow, maxcol, bomb=False) -> None:
+    def __init__(self, root, row, column, len, wid, maxrow, maxcol, bomb=False, text=" ") -> None:
         print(root)
 
         super().__init__(root, row, column, len, wid)
@@ -108,7 +108,7 @@ class Tile(Button1):
 
         print("you clicked on"+str(self.r)+" "+str(self.c))
         # if "no flag" mode is off and tile is not a bomb
-        if self.flaged is False and self.b is False:
+        if self.flaged is False and self.b is False and self.rev is False:
 
             # change the color of tile before tile is updated
             if self.col == self.colors["light green"] or self.col == self.colors["light green highlight"]:
@@ -155,7 +155,7 @@ class Tile(Button1):
                 # self.showbombs()
                 pass
 
-        # self.cleararea(num=1)
+        self.clearAround()
     
     # ========================================================================================================================================
     # user right clicked tile
@@ -197,9 +197,33 @@ class Tile(Button1):
                 # self.B.bind("<Enter>", self.sethoverintoT)
                 # self.B.bind("<Leave>", self.sethoverintoF)
 
+    def clearAround(self, event=None):
+        if self.rev is True:
+            locations = [
+                [self.r + 1, self.c - 1],
+                [self.r, self.c - 1],
+                [self.r - 1, self.c - 1],
+                [self.r - 1, self.c],
+                [self.r + 1, self.c],
+                [self.r - 1, self.c + 1],
+                [self.r, self.c + 1],
+                [self.r + 1, self.c + 1]
+            ]
 
+            c1 = 0
 
-
+            for i in locations:
+                for i1 in self.bomblist:
+                    if i == i1:
+                        if allTiles[i[0]][i[1]].b is True and allTiles[i[0]][i[1]].flaged is False:
+                            c1 = 1
+            if c1 == 0:
+                for i in locations:
+                    for i1 in allTiles:
+                        for i2 in i1:
+                            if i2.r == i[0] and i2.c == i[1] and i2.rev is False:
+                                i2.leftClick()
+            
 
 
 
@@ -210,15 +234,15 @@ print(root1)
 
 allbombs = []
 
-for i in range(10):
+for i in range(40):
 
     # creates and checks if position is already a bomb
     check1 = False
     while check1 is False:
 
         # creates random position
-        smth1 = random.randint(0, 10-1)
-        smth2 = random.randint(0, 10-1)
+        smth1 = random.randint(0, 20-1)
+        smth2 = random.randint(0, 20-1)
         
         #test position
         if [smth1, smth2] not in allbombs:
@@ -227,15 +251,15 @@ for i in range(10):
 
 allTiles = []
 
-for i in range(10):
+for i in range(20):
     mini = []
-    for i1 in range(10):
+    for i1 in range(20):
         if [i, i1] in allbombs:
-            newButton = Tile(root1, i, i1, " ", 16, 10, 10, 10, True)
+            newButton = Tile(root1, i, i1, 16, 10, 10, 10, bomb=True)
             newButton.bomblist = allbombs
             mini.append(newButton)
         else:
-            newButton = Tile(root1, i, i1, " ", 16, 10, 10, 10)
+            newButton = Tile(root1, i, i1, 16, 10, 10, 10)
             newButton.bomblist = allbombs
             mini.append(newButton)
     allTiles.append(mini)
