@@ -1,4 +1,3 @@
-from re import L
 import tkinter
 from tkinter import *
 import random, time
@@ -7,7 +6,7 @@ import random, time
 # for remembering home scren button values
 # ========================================================================================================================================
 class Button1():
-    def __init__(self, root2, row, column, len, wid, text=" ", color="white"):
+    def __init__(self, root2, row, column, len, wid, text=" ", color="white", LC = None, Enter = None, Leave = None):
 
         # row, column, text, length, width, background color, root, and button (object)
         self.r = row
@@ -16,6 +15,9 @@ class Button1():
         self.l = len
         self.w = wid
         self.col = color
+        self.LC = LC
+        self.En = Enter
+        self.Le = Leave
 
         self.root2 = root2
 
@@ -26,8 +28,10 @@ class Button1():
             pady=self.w,
             bg=self.col
         )
-        self.B.grid(row=self.c, column=self.r)
-        
+        self.B.grid(row=self.r+1, column=self.c)
+        self.B.bind("<Button-1>", self.LC)
+        self.B.bind("<Enter>", self.En)
+        self.B.bind("<Leave>", self.Le)
 
     def update(self):
         self.B.grid_remove()
@@ -38,7 +42,7 @@ class Button1():
             pady=self.w,
             bg=self.col
         )
-        self.B.grid(row=self.r, column=self.c)
+        self.B.grid(row=self.r+1, column=self.c)
     
     def updateT(self):
         print(round(self.l/3))
@@ -51,7 +55,7 @@ class Button1():
             width=round(self.l/3),
             height=round(self.w/3)
         )
-        self.B.grid(row=self.r, column=self.c)
+        self.B.grid(row=self.r+1, column=self.c)
 
 
 # ========================================================================================================================================
@@ -84,9 +88,9 @@ class Tile(Button1):
         "dark brown": "#838a5a",
     }
 
-    def __init__(self, root, row, column, len, wid, maxrow, maxcol, bomb=False, text=" ") -> None:
+    def __init__(self, root, row, column, len, wid, maxrow, maxcol, bomb=False, text=" ", LC = None, Enter = None, Leave = None) -> None:
 
-        super().__init__(root, row, column, len, wid)
+        super().__init__(root, row, column, len, wid, LC = LC, Enter = Enter, Leave = Leave)
         
         # bomb boolean
         self.b = bomb
@@ -133,6 +137,7 @@ class Tile(Button1):
     # ========================================================================================================================================
     # user left clicked tile
     def leftClick(self, event=None):
+        print("clicked on "+str(self.r)+", "+str(self.c))
         # if "no flag" mode is off and tile is not a bomb
         if self.flaged is False and self.b is False and self.rev is False:
 
@@ -173,7 +178,7 @@ class Tile(Button1):
         
         # if tile is a bomb
         if self.b is True:
-            
+            print("dead")
             # if doubles mode is true
             if self.double is True:
                 self.showbombs(2)
@@ -253,46 +258,3 @@ class Tile(Button1):
                                 i2.leftClick()
 
 
-root1 = Tk()
-B = Button(root1, text=" ", padx=10, pady=10, bg="white")
-B.grid(row=1, column = 1)
-
-allbombs = []
-
-for i in range(40):
-
-    # creates and checks if position is already a bomb
-    check1 = False
-    while check1 is False:
-
-        # creates random position
-        smth1 = random.randint(0, 20-1)
-        smth2 = random.randint(0, 20-1)
-        
-        #test position
-        if [smth1, smth2] not in allbombs:
-            allbombs.append([smth1, smth2])
-            check1 = True
-
-allTiles = []
-
-for i in range(20):
-    mini = []
-    for i1 in range(20):
-        if [i, i1] in allbombs:
-            newButton = Tile(root1, i, i1, 16, 10, 10, 10, bomb=True)
-            newButton.bomblist = allbombs
-            mini.append(newButton)
-        else:
-            newButton = Tile(root1, i, i1, 16, 10, 10, 10)
-            newButton.bomblist = allbombs
-            mini.append(newButton)
-    allTiles.append(mini)
-    mini[0].listOfTiles.append(mini)
-
-allTiles[0][0].bomblist = allbombs
-allTiles[0][0].mr = 10
-allTiles[0][0].mc = 10
-
-
-root1.mainloop()
