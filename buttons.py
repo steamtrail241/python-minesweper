@@ -6,7 +6,7 @@ import random, time
 # for remembering home scren button values
 # ========================================================================================================================================
 class Button1():
-    def __init__(self, root2, row, column, len, wid, text=" ", color="white", LC = None, Enter = None, Leave = None):
+    def __init__(self, root2, row, column, len, wid, text=" ", color="white", fg="black", LC = None, Enter = None, Leave = None):
 
         # row, column, text, length, width, background color, root, and button (object)
         self.r = row
@@ -18,6 +18,7 @@ class Button1():
         self.LC = LC
         self.En = Enter
         self.Le = Leave
+        self.fg = fg
 
         self.root2 = root2
 
@@ -26,7 +27,8 @@ class Button1():
             text=self.t,
             padx=self.l,
             pady=self.w,
-            bg=self.col
+            bg=self.col,
+            fg=self.fg
         )
         self.B.grid(row=self.r+1, column=self.c)
         self.B.bind("<Button-1>", self.LC)
@@ -40,7 +42,8 @@ class Button1():
             text=self.t,
             padx=self.l,
             pady=self.w,
-            bg=self.col
+            bg=self.col,
+            fg=self.fg
         )
         self.B.grid(row=self.r+1, column=self.c)
     
@@ -90,7 +93,7 @@ class Tile(Button1):
 
     def __init__(self, root, row, column, len, wid, maxrow, maxcol, bomb=False, text=" ", LC = None, Enter = None, Leave = None) -> None:
 
-        super().__init__(root, row, column, len, wid, LC = LC, Enter = Enter, Leave = Leave)
+        super().__init__(root, row, column, len, wid, text=text, LC = LC, Enter = Enter, Leave = Leave)
         
         # bomb boolean
         self.b = bomb
@@ -120,12 +123,10 @@ class Tile(Button1):
         # selects colors based on tile position
         if self.r % 2 == 0 and self.c % 2 == 0 or self.r % 2 == 1 and self.c % 2 == 1:
             self.col = self.colors["dark green"]
+            self.fg = self.colors["dark green"]
         else:
             self.col = self.colors["light green"]
-        
-        
-        # self.B.bind("<Enter>", self.sethoverintoT)
-        # self.B.bind("<Leave>", self.sethoverintoF)
+            self.fg = self.colors["light green"]
 
         # update button to change color
         self.update()
@@ -144,30 +145,37 @@ class Tile(Button1):
             # change the color of tile before tile is updated
             if self.col == self.colors["light green"] or self.col == self.colors["light green highlight"]:
                 self.col = self.colors["light brown"]
+                self.fg = "black"
+                if self.t == "0":
+                    self.fg = self.colors["light brown"]
             
             if self.col == self.colors["dark green"] or self.col == self.colors["dark green highlight"]:
                 self.col = self.colors["dark brown"]
+                self.fg = "black"
+                if self.t == "0":
+                    self.fg = self.colors["dark brown"]
+            
 
-            # find how many bombs are nearby
-            locations = [
-                [self.r + 1, self.c - 1],
-                [self.r, self.c - 1],
-                [self.r - 1, self.c - 1],
-                [self.r - 1, self.c],
-                [self.r + 1, self.c],
-                [self.r - 1, self.c + 1],
-                [self.r, self.c + 1],
-                [self.r + 1, self.c + 1]
-            ]
+            # # find how many bombs are nearby
+            # locations = [
+            #     [self.r + 1, self.c - 1],
+            #     [self.r, self.c - 1],
+            #     [self.r - 1, self.c - 1],
+            #     [self.r - 1, self.c],
+            #     [self.r + 1, self.c],
+            #     [self.r - 1, self.c + 1],
+            #     [self.r, self.c + 1],
+            #     [self.r + 1, self.c + 1]
+            # ]
 
-            # see if any coordinates are bombs
-            bombs = 0
-            for i in locations:
-                if i in self.bomblist:
-                    bombs += 1
-            if bombs != 0:
-                self.t = str(bombs)
-                self.l -= 2
+            # # see if any coordinates are bombs
+            # bombs = 0
+            # for i in locations:
+            #     if i in self.bomblist:
+            #         bombs += 1
+            # if bombs != 0:
+            #     self.l -= 2
+
             
             self.update()
 
@@ -175,6 +183,8 @@ class Tile(Button1):
             self.rev = True
 
             self.B.bind("<Button-1>", self.clearAround)
+            
+            self.clearAround()
         
         # if tile is a bomb
         if self.b is True:
@@ -188,7 +198,6 @@ class Tile(Button1):
                 # self.showbombs()
                 pass
 
-        self.clearAround()
     
     # ========================================================================================================================================
     # user right clicked tile
@@ -245,16 +254,26 @@ class Tile(Button1):
 
             c1 = 0
 
-            for i in locations:
-                for i1 in self.bomblist:
-                    if i == i1:
-                        if self.listOfTiles[i[0]][i[1]].b is True and self.listOfTiles[i[0]][i[1]].flaged is False:
-                            c1 = 1
-            if c1 == 0:
+            if self.t != "0":
                 for i in locations:
+                    if c1 == 1:
+                        break
+                    for i1 in self.bomblist:
+                        if i == i1:
+                            if self.listOfTiles[i[0]][i[1]].b is True and self.listOfTiles[i[0]][i[1]].flaged is False:
+                                c1 = 1
+                                break
+            if c1 == 0:
+                found = False
+                for i in locations:
+                    found = False
                     for i1 in self.listOfTiles:
+                        if found is True:
+                            break
                         for i2 in i1:
                             if i2.r == i[0] and i2.c == i[1] and i2.rev is False:
                                 i2.leftClick()
+                                found = True
+                                break
 
 

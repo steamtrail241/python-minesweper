@@ -1,3 +1,4 @@
+from math import fabs
 from tkinter import *
 import random
 import time
@@ -62,12 +63,28 @@ class RegularMinesweeper(Tk):
         for i in range(20):
             mini = []
             for i1 in range(20):
-                if [i, i1] in allbombs:
-                    newButton = buttons.Tile(self, i, i1, 16, 10, 10, 10, bomb=True)
+                if [i, i1] in allbombs: 
+                    newButton = buttons.Tile(self, i, i1, 16, 10, 10, 10, bomb=True, text="9")
                     newButton.bomblist = allbombs
                     mini.append(newButton)
                 else:
-                    newButton = buttons.Tile(self, i, i1, 16, 10, 10, 10)
+                    locations = [
+                        [i + 1, i1 - 1],
+                        [i, i1 - 1],
+                        [i - 1, i1 - 1],
+                        [i - 1, i1],
+                        [i + 1, i1],
+                        [i - 1, i1 + 1],
+                        [i, i1 + 1],
+                        [i + 1, i1 + 1]
+                    ]
+                    bombs = 0
+                    for i2 in locations:
+                        for i3 in allbombs:
+                            if i2[0] == i3[0] and i2[1] == i3[1]:
+                                bombs += 1
+                    bombs = str(bombs)
+                    newButton = buttons.Tile(self, i, i1, 16, 10, 10, 10, text = bombs)
                     newButton.bomblist = allbombs
                     mini.append(newButton)
             allTiles.append(mini)
@@ -84,6 +101,7 @@ class RegularMinesweeper(Tk):
         self.Navbar.grid(row = 0, column = 0, columnspan = 15)
 
         self.comunicate = buttons.Tile(self, -1, 15, 16, 1, None, None, None)
+        self.comunicate.rev = True
 
         self.Upd()
         self.Upd2()
@@ -151,7 +169,34 @@ class RegularMinesweeper(Tk):
             return str(str(hours) + ":" + str(minutes) + ":" + str(seconds))
     
     def Window_Close(self, event = None):
-        if messagebox.askokcancel("you sure?", "hehehehehshshs"):
-            self.destroy()
+
+        # checks if user has completed the game
+        check = False
+        for i in self.comunicate.listOfTiles:
+            for i1 in i:
+                if i1.b is False and i1.rev is False:
+                    check = True
+                    print(i1.r)
+                    print(i1.c)
+                    print("===")
+        print(check)
+
+        if check:
+
+            # confirms with user about leaving game if user is not finished
+            if messagebox.askokcancel("you sure?", "are you sure you would like to exit?"):
+                self.DestroyGame()
+        else:
+            self.DestroyGame()
+    
+    def DestroyGame(self, event = None):
+        for i in self.comunicate.listOfTiles:
+            for i1 in i:
+                i1.B.grid_remove()
+        self.comunicate.listOfTiles = []
+        self.comunicate.bomblist = []
+        self.comunicate.B.grid_remove()
+        self.Navbar.grid_remove()
+        self.destroy()
 
 screen1 = Main_S()
