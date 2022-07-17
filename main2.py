@@ -1,4 +1,3 @@
-from configparser import InterpolationError
 from tkinter import *
 from tkinter import messagebox
 import random, time
@@ -106,6 +105,16 @@ class Tile(Button1):
         print("["+str(self.row)+","+str(self.column)+"],")
         if not self.isFlaged and not self.isBomb and not self.isReveal:
 
+            if self.isBomb:
+                print("your dead")
+                for i in bombsList:
+                    allTiles[i[0]][i[1]].color = "brown"
+                    allTiles[i[0]][i[1]].foreGround = "brown"
+                    allTiles[i[0]][i[1]].update()
+                for i in allTiles:
+                    for i1 in i:
+                        i1.button.bind("<Button-1>", destoryGame)
+
             if self.color == self.colors["light green"] or self.color == self.colors["light green highlight"]:
                 self.color = self.colors["light brown"]
                 self.foreGround = "black"
@@ -122,14 +131,17 @@ class Tile(Button1):
 
             self.isReveal = True
             self.button.bind("<Button-1><Button-3>", self.leftRightClick)
-            begining = time.time()
             self.clearAround()
-            if self.theOne:
-                print(time.time()-begining)
-        # print("clicked on "+str(self.row)+", "+str(self.column))
-        # if self.isBomb:
-        #     print("your dead")
-    
+        
+        if not self.isFlaged and self.isBomb and not self.isReveal:
+            print("your dead")
+            for i in bombsList:
+                allTiles[i[0]][i[1]].color = "brown"
+                allTiles[i[0]][i[1]].foreGround = "brown"
+                allTiles[i[0]][i[1]].update()
+            for i in allTiles:
+                for i1 in i:
+                    i1.button.bind("<Button-1>", destoryGame)
 
     def rightClick(self, event=None):
         if not self.isReveal:
@@ -178,7 +190,7 @@ class Tile(Button1):
 
             if self.numberOfBombsNearby == "0":
                 for i in locations:
-                    if not i == "_" and not allTiles[i[0]][i[1]].isReveal and not allTiles[i[0]][i[1]].isAreaCleared:
+                    if not i == "_" and not allTiles[i[0]][i[1]].isReveal and not allTiles[i[0]][i[1]].isAreaCleared and not allTiles[i[0]][i[1]].isBomb:
                         try:
                             allTiles[i[0]][i[1]].leftClick()
                         except(RecursionError):
@@ -212,7 +224,7 @@ class Tile(Button1):
             
             if checkBombsAreFlaged:
                 for i in locations:
-                    if i != "_":
+                    if i != "_" and not allTiles[i[0]][i[1]].isBomb:
                         allTiles[i[0]][i[1]].leftClick()
             print(time.time()-begining)
 
@@ -280,7 +292,7 @@ class MainScreen(Tk):
 
 
     def leftClickRegular(self, event=None):
-        startRegular(20, 20, 40)
+        startRegular(25, 40, 100)
 
 
     def enterRegular(self, event=None):
@@ -295,6 +307,7 @@ class MainScreen(Tk):
 
 
 def startRegular(row, column, bombs):
+    global regularscreen
     global bombsList
     global bombsNearby
     global allTiles
@@ -368,6 +381,9 @@ def startRegular(row, column, bombs):
     if check2==row*column*10+1:
         print("not available")
     print(allTiles)
+    timer = Timer()
+    regularscreen.updateTitle(timer, 5)
+    regularscreen.checkWin()
 
 
 def keyWasPressed(key):
@@ -393,6 +409,9 @@ def keyWasPressed(key):
     allTiles[xFocus][yFocus].highlight()
     allTiles[xPrev][yPrev].highlight()
 
+def destoryGame(event=None):
+    regularscreen.destroy()
+
 
 
 class RegularScreen(Tk):
@@ -402,6 +421,7 @@ class RegularScreen(Tk):
         self.bind("<space>", self.spacePressed)
         self.bind("<Tab><space>", self.tabSpacePressed)
         self.resizable(False, False)
+        self.protocol("WM_DELETE_WINDOW", self.windowCloseEvent)
 
 
     def initialize(self, row, column, event=None):
@@ -417,15 +437,103 @@ class RegularScreen(Tk):
                     mini.append(newTile)
             allTiles.append(mini)
 
+
     def keyPressed(self, event):
         print(event.char)
         keyWasPressed(event.char)
     
+
     def spacePressed(self, event=None):
         keyWasPressed("space")
     
+
     def tabSpacePressed(self, event=None):
         keyWasPressed("tabspace")
+    
+
+    def updateTitle(self, timerObj, num):
+
+        flags = len(bombsList)
+        for i in allTiles:
+            for i1 in i:
+                if i1.isFlaged:
+                    flags -= 1
+        
+        if num == 5:
+            timerObj.changeTime()
+            num = 0
+        num += 1
+
+        self.title(timerObj.returnTime()+"  |  "+str(flags)+" flags")
+        self.after(200, self.updateTitle, timerObj, num)
+    
+
+    def checkWin(self, event=None):
+        checkWin = True
+        for i in allTiles:
+            for i1 in i:
+                if not i1.isBomb and not i1.isReveal:
+                    checkWin = False
+                    break
+        if checkWin:
+            for i in allTiles:
+                for i1 in i:
+                    if not i1.isBomb:
+                        i1.color = "blue"
+                        i1.foreGround = "blue"
+                        i1.update()
+                        i1.button.bind("<Button-1>", destoryGame)
+        else:
+            self.after(100, self.checkWin)
+    
+
+    def windowCloseEvent(self, event=None):
+        check = False
+        for i in allTiles:
+            for i1 in i:
+                if not i1.isBomb and i1.isReveal:
+                    check = True
+        if check:
+            if messagebox.askokcancel("you sure?", "you are not finished this game\nare you sure you would like to exit"):
+                self.destroy()
+        else:
+            self.destroy()
+
+
+
+class Timer():
+    def __init__(self):
+        self.timeron = True
+        self.seconds = 0
+        self.minutes = 0
+        self.hours = 0
+
+    def changeTime(self):
+        if self.timeron is True:
+            self.seconds = self.seconds + 1
+        if self.seconds == 60:
+            self.minutes = self.minutes + 1
+            self.seconds = 0
+        if self.minutes == 60:
+            self.hours = self.hours + 1
+            self.minutes = 0
+
+        return self.returnTime()
+    
+    def returnTime(self):
+        seconds = self.seconds
+        if self.seconds < 10:
+            seconds = str("0" + str(self.seconds))
+        minutes = self.minutes
+        if self.minutes < 10:
+            minutes = str("0" + str(self.minutes))
+        hours = self.hours
+        if self.hours < 10:
+            hours = str("0" + str(self.hours))
+        return str(str(hours) + ":" + str(minutes) + ":" + str(seconds))
+    
+    def pauseTimer(self):
+        self.timeron = False
 
 mainscreen = MainScreen()
 
