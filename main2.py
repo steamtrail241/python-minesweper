@@ -1,3 +1,4 @@
+from configparser import InterpolationError
 from tkinter import *
 from tkinter import messagebox
 import random, time
@@ -12,7 +13,6 @@ maxRows = 0
 maxColumns = 0
 xFocus = 0
 yFocus = 0
-
 
 
 class Button1():
@@ -103,6 +103,7 @@ class Tile(Button1):
 
 
     def leftClick(self, event=None):
+        print("["+str(self.row)+","+str(self.column)+"],")
         if not self.isFlaged and not self.isBomb and not self.isReveal:
 
             if self.color == self.colors["light green"] or self.color == self.colors["light green highlight"]:
@@ -123,7 +124,7 @@ class Tile(Button1):
             self.button.bind("<Button-1><Button-3>", self.leftRightClick)
             begining = time.time()
             self.clearAround()
-            if(self.theOne):
+            if self.theOne:
                 print(time.time()-begining)
         # print("clicked on "+str(self.row)+", "+str(self.column))
         # if self.isBomb:
@@ -185,32 +186,35 @@ class Tile(Button1):
                 self.isAreaCleared = True
     
     def leftRightClick(self, event=None):
-        locations = [
-            [self.row + 1, self.column - 1],
-            [self.row, self.column - 1],
-            [self.row - 1, self.column - 1],
-            [self.row - 1, self.column],
-            [self.row + 1, self.column],
-            [self.row - 1, self.column + 1],
-            [self.row, self.column + 1],
-            [self.row + 1, self.column + 1]
-        ]
+        if self.txt != "0":
+            begining = time.time()
+            locations = [
+                [self.row + 1, self.column - 1],
+                [self.row, self.column - 1],
+                [self.row - 1, self.column - 1],
+                [self.row - 1, self.column],
+                [self.row + 1, self.column],
+                [self.row - 1, self.column + 1],
+                [self.row, self.column + 1],
+                [self.row + 1, self.column + 1]
+            ]
 
-        for i in locations:
-            if i[0]<0 or i[0]>maxRows-1 or i[1]<0 or i[1]>maxColumns-1:
-                locations[locations.index(i)] = "_"
-        
-        checkBombsAreFlaged = True
-        for i in locations:
-            if i != "_":
-                if allTiles[i[0]][i[1]].isBomb and not allTiles[i[0]][i[1]].isFlaged:
-                    checkBombsAreFlaged = False
-                    break
-        
-        if checkBombsAreFlaged:
+            for i in locations:
+                if i[0]<0 or i[0]>maxRows-1 or i[1]<0 or i[1]>maxColumns-1:
+                    locations[locations.index(i)] = "_"
+            
+            checkBombsAreFlaged = True
             for i in locations:
                 if i != "_":
-                    allTiles[i[0]][i[1]].leftClick()
+                    if allTiles[i[0]][i[1]].isBomb and not allTiles[i[0]][i[1]].isFlaged:
+                        checkBombsAreFlaged = False
+                        break
+            
+            if checkBombsAreFlaged:
+                for i in locations:
+                    if i != "_":
+                        allTiles[i[0]][i[1]].leftClick()
+            print(time.time()-begining)
 
     def highlight(self, event=None):
 
@@ -259,6 +263,7 @@ class MainScreen(Tk):
             Enter=self.enterRegular,
             Leave=self.leaveRegular,
         )
+
         self.mainloop()
     
 
@@ -275,7 +280,7 @@ class MainScreen(Tk):
 
 
     def leftClickRegular(self, event=None):
-        startRegular(20, 25, 100)
+        startRegular(20, 20, 40)
 
 
     def enterRegular(self, event=None):
@@ -288,8 +293,10 @@ class MainScreen(Tk):
 
 
 
+
 def startRegular(row, column, bombs):
     global bombsList
+    global bombsNearby
     global allTiles
     global maxRows
     global maxColumns
@@ -314,6 +321,7 @@ def startRegular(row, column, bombs):
     
     allTiles = []
     print(bombsList)
+    bombsNearby = []
 
     for i in range(row):
         mini = []
@@ -350,7 +358,7 @@ def startRegular(row, column, bombs):
             allTiles[num1][num2].update()
             allTiles[num1][num2].color = originalColor
             allTiles[num1][num2].button.bind("<Button-1>", allTiles[num1][num2].leftClick)
-            allTiles[num1][num2].theOne = True
+            # allTiles[num1][num2].theOne = True
             xFocus = num1
             yFocus = num2
             check2 = -2
@@ -359,6 +367,7 @@ def startRegular(row, column, bombs):
             break
     if check2==row*column*10+1:
         print("not available")
+    print(allTiles)
 
 
 def keyWasPressed(key):
@@ -392,6 +401,7 @@ class RegularScreen(Tk):
         self.bind("<Key>", self.keyPressed)
         self.bind("<space>", self.spacePressed)
         self.bind("<Tab><space>", self.tabSpacePressed)
+        self.resizable(False, False)
 
 
     def initialize(self, row, column, event=None):
@@ -418,3 +428,4 @@ class RegularScreen(Tk):
         keyWasPressed("tabspace")
 
 mainscreen = MainScreen()
+
