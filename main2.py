@@ -13,8 +13,11 @@ maxColumns = 0
 xFocus = 0
 yFocus = 0
 
-
+# ====================================================================================================================================================
+# Button class
+# ====================================================================================================================================================
 class Button1():
+    """this is used for main menus and user input buttons and not in actual games"""
     def __init__(self, root, row, column, len, wid, text=" ", color="white", fg="black", leftClick=None, Enter=None, Leave=None):
         self.root = root
         self.row = row
@@ -54,8 +57,16 @@ class Button1():
 
 
 
-
+# ====================================================================================================================================================
+# Tile for minesweeper games
+# ====================================================================================================================================================
 class Tile(Button1):
+    """
+        Used in all games of minesweeper inluding
+          - regular
+          - doubles
+          - tutorial
+    """
 
     # color options
     colors = {
@@ -104,17 +115,8 @@ class Tile(Button1):
     def leftClick(self, event=None):
         print("["+str(self.row)+","+str(self.column)+"],")
         if not self.isFlaged and not self.isBomb and not self.isReveal:
-
-            if self.isBomb:
-                print("your dead")
-                for i in bombsList:
-                    allTiles[i[0]][i[1]].color = "brown"
-                    allTiles[i[0]][i[1]].foreGround = "brown"
-                    allTiles[i[0]][i[1]].update()
-                for i in allTiles:
-                    for i1 in i:
-                        i1.button.bind("<Button-1>", destoryGame)
-
+            
+            # change tile color based on it's position in checkerboard pattern
             if self.color == self.colors["light green"] or self.color == self.colors["light green highlight"]:
                 self.color = self.colors["light brown"]
                 self.foreGround = "black"
@@ -127,25 +129,39 @@ class Tile(Button1):
                 if self.txt == "0":
                     self.foreGround = self.color
             
+            # updates changes in color to UI
             self.update()
 
             self.isReveal = True
+            
+            # adds clear around (based on flags) to tile
             self.button.bind("<Button-1><Button-3>", self.leftRightClick)
+            
+            # calls clear around (based on if there are bombs around tile) 
             self.clearAround()
         
+        # checks if user clicked on a bomb
         if not self.isFlaged and self.isBomb and not self.isReveal:
             print("your dead")
+
+            # changes all tiles that are bombs to a brown color
             for i in bombsList:
                 allTiles[i[0]][i[1]].color = "brown"
                 allTiles[i[0]][i[1]].foreGround = "brown"
                 allTiles[i[0]][i[1]].update()
+            
+            # binds all Tiles to destory game when clicked
             for i in allTiles:
                 for i1 in i:
                     i1.button.bind("<Button-1>", destoryGame)
 
     def rightClick(self, event=None):
         if not self.isReveal:
+
+            # if tile is not flaged
             if not self.isFlaged:
+                
+                # change color to orange, text to "F" and bind appropriate functions
                 self.txt = "F"
                 self.color = "orange"
                 self.len -= 1
@@ -157,6 +173,8 @@ class Tile(Button1):
                 self.button.bind("<Button-1>", self.leftClick)
                 self.button.bind("<Button-3>", self.rightClick)
             else:
+
+                # change length back, set flagged variable to false, change text back, change original color back, bind appropriate functions
                 self.len += 1
                 self.isFlaged = False
                 self.txt = self.numberOfBombsNearby
@@ -173,6 +191,8 @@ class Tile(Button1):
 
     def clearAround(self, event=None):
         if self.isReveal is True and self.isAreaCleared is False:
+
+            # lists co-ordinates of tiles next to this tile
             locations = [
                 [self.row + 1, self.column - 1],
                 [self.row, self.column - 1],
@@ -184,10 +204,12 @@ class Tile(Button1):
                 [self.row + 1, self.column + 1]
             ]
 
+            # removes non-existant tiles
             for i in locations:
                 if i[0]<0 or i[0]>maxRows-1 or i[1]<0 or i[1]>maxColumns-1:
                     locations[locations.index(i)] = "_"
 
+            # checks if this tile has no bombs around it and clears tiles near it
             if self.numberOfBombsNearby == "0":
                 for i in locations:
                     if not i == "_" and not allTiles[i[0]][i[1]].isReveal and not allTiles[i[0]][i[1]].isAreaCleared and not allTiles[i[0]][i[1]].isBomb:
@@ -199,7 +221,8 @@ class Tile(Button1):
     
     def leftRightClick(self, event=None):
         if self.txt != "0":
-            begining = time.time()
+
+            # lists co-ordinates of tiles next to this tile
             locations = [
                 [self.row + 1, self.column - 1],
                 [self.row, self.column - 1],
@@ -210,11 +233,13 @@ class Tile(Button1):
                 [self.row, self.column + 1],
                 [self.row + 1, self.column + 1]
             ]
-
+            
+            # removes non-existant tiles
             for i in locations:
                 if i[0]<0 or i[0]>maxRows-1 or i[1]<0 or i[1]>maxColumns-1:
                     locations[locations.index(i)] = "_"
             
+            # checks that all tiles that are bombs around this tile are flaged
             checkBombsAreFlaged = True
             for i in locations:
                 if i != "_":
@@ -222,13 +247,18 @@ class Tile(Button1):
                         checkBombsAreFlaged = False
                         break
             
+            # clears tiles around this tile if all bombs next to this tile are flaged
             if checkBombsAreFlaged:
                 for i in locations:
+                    # checks if a tile aroudn this tile is a bomb
                     if i != "_" and not allTiles[i[0]][i[1]].isBomb:
                         allTiles[i[0]][i[1]].leftClick()
-            print(time.time()-begining)
 
     def highlight(self, event=None):
+        """
+            this is for when the user used WASD and JL to play the game and the user
+            needs to know where their cursor is.
+        """
 
         checkChange = False
         if self.color == self.colors["dark green"]:
@@ -239,6 +269,7 @@ class Tile(Button1):
             self.color = self.colors["light green highlight"]
             self.foreGround = self.colors["light green highlight"]
             checkChange = True
+        
         if self.color == self.colors["dark green highlight"] and not checkChange:
             self.color = self.colors["dark green"]
             self.foreGround = self.colors["dark green"]
@@ -256,6 +287,7 @@ class MainScreen(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
 
+        # creates a button to start doubles game
         self.doublesButton = Button1(
             self,
             0, 0,
@@ -265,7 +297,9 @@ class MainScreen(Tk):
             Enter=self.enterDouble,
             Leave=self.leaveDouble,
         )
+        self.doublesButton.button.bind("<mutton-1", None)
 
+        # creats a button to start regular game
         self.regularButton = Button1(
             self,
             0, 1,
@@ -278,31 +312,29 @@ class MainScreen(Tk):
 
         self.mainloop()
     
-
+    # user left clicked the double game button
     def leftClickDouble(self, event=None):
         pass
 
-
+    # mouse entered the double game button
     def enterDouble(self, event=None):
         pass
 
-
+    # mouse left the double game button
     def leaveDouble(self, even=None):
         pass
 
-
+    # user left clicked the regular game button
     def leftClickRegular(self, event=None):
-        startRegular(25, 40, 100)
+        startRegular(33, 61, 300)
 
-
+    # mouse entered the regular game button
     def enterRegular(self, event=None):
         pass
 
-
+    # mouse left the regular game button
     def leaveRegular(self, event=None):
         pass
-
-
 
 
 
@@ -534,6 +566,7 @@ class Timer():
     
     def pauseTimer(self):
         self.timeron = False
+
 
 mainscreen = MainScreen()
 
