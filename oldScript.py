@@ -106,8 +106,6 @@ class InputScreenRegular(Tk):
         self.canvas1.create_window(200, 230, window=self.inputna)
         self.canvas1.grid(row=1, column=1)
         self.beginbutton = Button(self, text="!BEGIN!")
-        myfont = font.Font(size=30)
-        self.beginbutton["font"] = myfont
         self.beginbutton.grid(row=2, column=1)
         self.beginbutton.bind("<Button-1>", self.BindForBeginButton)
         self.c = 0
