@@ -489,6 +489,8 @@ def startRegular(row, column, bombs):
     global xFocus
     global yFocus
 
+    InputRegularScreen()
+
     maxRows = row
     maxColumns = column
     
