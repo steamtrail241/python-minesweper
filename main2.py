@@ -605,7 +605,9 @@ def keyWasPressed(key):
 def destoryGame(event=None):
     regularscreen.destroy()
 
-
+class InputRegularScreen(Tk):
+    def __init__(self, *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
 
 class RegularScreen(Tk):
     def __init__(self, *args, **kwargs):
