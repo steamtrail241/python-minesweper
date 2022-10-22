@@ -330,7 +330,7 @@ class Tile(Button1):
                     self.foreGround = self.colors["light brown"]
             
 
-
+#changed a thing
 
         self.update()
         self.button.bind("<Button-1>", self.leftClick)
