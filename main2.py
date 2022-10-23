@@ -611,6 +611,8 @@ def keyWasPressed(key):
             allTiles[xFocus][yFocus].highlight()
             allTiles[xPrev][yPrev].highlight()
 
+print("hello world")
+
 def destoryGame(event=None):
     regularscreen.destroy()
 
