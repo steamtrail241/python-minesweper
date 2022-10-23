@@ -639,13 +639,7 @@ class InputRegularScreen(Tk):
             columns = int(columns)
             bombs = int(bombs)
             if rows * columns * 0.1 <= bombs:
-                global maxRows
-                global maxColumns
-                global bombcount
-                maxRows = int(self.rows.contains)
-                maxColumns = int(self.columns.contains)
-                bombcount = int(self.columns.contains)
-                startRegular(maxRows, maxColumns, bombcount)
+                startRegular(rows, columns, bombs)
 
 class RegularScreen(Tk):
     def __init__(self, *args, **kwargs):
