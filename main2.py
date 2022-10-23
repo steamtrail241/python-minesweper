@@ -1,3 +1,4 @@
+from multiprocessing.util import MAXFD
 from tkinter import *
 from tkinter import messagebox
 from tkinter import Entry
@@ -11,6 +12,7 @@ regularscreen = 0
 doublesscreen = 0
 maxRows = 0
 maxColumns = 0
+bombcount = 20
 xFocus = 0
 yFocus = 0
 gameOver = False
@@ -469,7 +471,7 @@ class MainScreen(Tk):
 
     # user left clicked the regular game button
     def leftClickRegular(self, event=None):
-        startRegular(13, 20, 50)
+        startRegularInputs()
 
     # mouse entered the regular game button
     def enterRegular(self, event=None):
@@ -479,7 +481,8 @@ class MainScreen(Tk):
     def leaveRegular(self, event=None):
         pass
 
-
+def startRegularInputs():
+    asdfasdfsdf = InputRegularScreen()
 
 def startRegular(row, column, bombs):
     global regularscreen
@@ -493,8 +496,6 @@ def startRegular(row, column, bombs):
     global gameOver
 
     gameOver = False
-
-    InputRegularScreen()
 
     maxRows = row
     maxColumns = column
@@ -622,8 +623,29 @@ class InputRegularScreen(Tk):
         self.rows = Inputer(self, 0, 0, 0, 0, 20, 100, True)
         self.columns = Inputer(self, 1, 0, 0, 0, 20, 100, True)
         self.bombs = Inputer(self, 2, 0, 0, 0, 20, 100, True)
-        self.go = Button1(self, 3, 3, 10, 10, "!begin!")
+        self.go = Button1(self, 3, 3, 10, 10, "!begin!", leftClick=self.continueToGame)
         self.mainloop()
+    
+    def continueToGame(self, event=None):
+        rows = self.rows.entry.get()
+        columns = self.columns.entry.get()
+        bombs = self.bombs.entry.get()
+        print(rows)
+        print(columns)
+        print(bombs)
+
+        if rows.isnumeric() and columns.isnumeric() and bombs.isnumeric():
+            rows = int(rows)
+            columns = int(columns)
+            bombs = int(bombs)
+            if rows * columns * 0.1 <= bombs:
+                global maxRows
+                global maxColumns
+                global bombcount
+                maxRows = int(self.rows.contains)
+                maxColumns = int(self.columns.contains)
+                bombcount = int(self.columns.contains)
+                startRegular(maxRows, maxColumns, bombcount)
 
 class RegularScreen(Tk):
     def __init__(self, *args, **kwargs):
