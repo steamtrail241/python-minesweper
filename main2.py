@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter import Entry
 import random
 
 bombsList = []
@@ -352,6 +353,7 @@ class Inputer():
         self.limit = limit
 
         self.entry = Entry(self.root)
+        self.entry.grid(row=row, column=column+3)
 
         if boxes:
             self.leftChange10 = Button1(
@@ -610,6 +612,8 @@ def destoryGame(event=None):
 class InputRegularScreen(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
+        self.rows = Inputer(self, 0, 0, 0, 0, 20, 100, True)
+        self.mainloop()
 
 class RegularScreen(Tk):
     def __init__(self, *args, **kwargs):
