@@ -620,6 +620,9 @@ class InputRegularScreen(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.rows = Inputer(self, 0, 0, 0, 0, 20, 100, True)
+        self.columns = Inputer(self, 1, 0, 0, 0, 20, 100, True)
+        self.bombs = Inputer(self, 2, 0, 0, 0, 20, 100, True)
+        self.go = Button1(self, 3, 3, 10, 10, "!begin!")
         self.mainloop()
 
 class RegularScreen(Tk):
