@@ -13,6 +13,7 @@ maxRows = 0
 maxColumns = 0
 xFocus = 0
 yFocus = 0
+gameOver = False
 
 
 # ====================================================================================================================================================
@@ -160,6 +161,8 @@ class Tile(Button1):
         
         # checks if user clicked on a bomb
         if not self.isFlaged and self.isBomb and not self.isReveal:
+            global gameOver
+            gameOver = True
             print("your dead")
 
             # changes all tiles that are bombs to a brown color
@@ -329,9 +332,6 @@ class Tile(Button1):
                 self.foreGround = "black"
                 if self.numberOfBombsNearby == "0":
                     self.foreGround = self.colors["light brown"]
-            
-
-#changed a thing
 
         self.update()
         self.button.bind("<Button-1>", self.leftClick)
@@ -490,6 +490,9 @@ def startRegular(row, column, bombs):
     global maxColumns
     global xFocus
     global yFocus
+    global gameOver
+
+    gameOver = False
 
     InputRegularScreen()
 
@@ -564,47 +567,49 @@ def startRegular(row, column, bombs):
 def keyWasPressed(key):
     global xFocus
     global yFocus
+    global gameOver
     xPrev = xFocus
     yPrev = yFocus
     checkClear = False
-    match(key):
-        case "j":
-            allTiles[xFocus][yFocus].leftClick()
-            allTiles[xFocus][yFocus].color = allTiles[xFocus][yFocus].colors["cyan"]
-            allTiles[xFocus][yFocus].foreGround = "black"
-            allTiles[xFocus][yFocus].update()
-            checkClear = True
-        case "w":
-            if xFocus != 0:
-                xFocus -= 1
-        case "a":
-            if yFocus != 0:
-                yFocus -= 1
-        case "s":
-            print(maxRows)
-            print(xFocus)
-            if xFocus != maxRows-1:
-                xFocus += 1
-            else:
-                print("columns aborted")
-        case "d":
-            print(maxColumns)
-            print(yFocus)
-            if yFocus != maxColumns -1:
-                yFocus += 1
-            else:
-                print("rows aborted")
-        case "l":
-            allTiles[xFocus][yFocus].rightClick()
-        case "space":
-            allTiles[xFocus][yFocus].leftRightClick()
-            checkClear = True
-        case other:
-            pass
+    if not gameOver:
+        match(key):
+            case "j":
+                allTiles[xFocus][yFocus].leftClick()
+                allTiles[xFocus][yFocus].color = allTiles[xFocus][yFocus].colors["cyan"]
+                allTiles[xFocus][yFocus].foreGround = "black"
+                allTiles[xFocus][yFocus].update()
+                checkClear = True
+            case "w":
+                if xFocus != 0:
+                    xFocus -= 1
+            case "a":
+                if yFocus != 0:
+                    yFocus -= 1
+            case "s":
+                print(maxRows)
+                print(xFocus)
+                if xFocus != maxRows-1:
+                    xFocus += 1
+                else:
+                    print("columns aborted")
+            case "d":
+                print(maxColumns)
+                print(yFocus)
+                if yFocus != maxColumns -1:
+                    yFocus += 1
+                else:
+                    print("rows aborted")
+            case "l":
+                allTiles[xFocus][yFocus].rightClick()
+            case "space":
+                allTiles[xFocus][yFocus].leftRightClick()
+                checkClear = True
+            case other:
+                pass
 
-    if not checkClear:
-        allTiles[xFocus][yFocus].highlight()
-        allTiles[xPrev][yPrev].highlight()
+        if not checkClear:
+            allTiles[xFocus][yFocus].highlight()
+            allTiles[xPrev][yPrev].highlight()
 
 def destoryGame(event=None):
     regularscreen.destroy()
@@ -632,10 +637,10 @@ class RegularScreen(Tk):
                 if (i % 2 == 0 and i1 % 2 == 0) or (i % 2 == 1 and i1 % 2 == 1):
                     light = False
                 if [i, i1] in bombsList:
-                    newTile = Tile(self, i, i1, 10, 4, text="9", lightTile = light, bomb=True)
+                    newTile = Tile(self, i, i1, 9, 4, text="9", lightTile = light, bomb=True)
                     mini.append(newTile)
                 else:
-                    newTile = Tile(self, i, i1, 10, 4, text=str(bombsNearby[i][i1]), lightTile = light,)
+                    newTile = Tile(self, i, i1, 9, 4, text=str(bombsNearby[i][i1]), lightTile = light,)
                     mini.append(newTile)
             allTiles.append(mini)
 
