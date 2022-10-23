@@ -54,6 +54,7 @@ class Inputer():
         self.limit = limit
 
         self.entry = Entry(self.root)
+        self.entry.grid(row=row, column=column+3)
 
         self.leftChange10 = Button1(
             root,
@@ -130,7 +131,7 @@ asjkdfhk = 0
 class mywindow(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
-        self.kasdfkjhj = Inputer(self, 0, 0, 16, 4, "20", 100)
+        self.kasdfkjhj = Inputer(self, 1, 0, 16, 4, "20", 100)
         self.mainloop()
 
 hasjkdf = mywindow()
