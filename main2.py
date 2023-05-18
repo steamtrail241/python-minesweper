@@ -1,11 +1,14 @@
-from multiprocessing.util import MAXFD
 from tkinter import *
 from tkinter import messagebox
 from tkinter import Entry
 import random
 
+from tkinter import Button
+from tkinter import Entry
+from tkinter import Tk
+
 bombsList = []
-allTiles=[]
+allTiles = []
 bombsNearby = []
 mainscreen = 0
 regularscreen = 0
@@ -22,16 +25,32 @@ gameOver = False
 # Button class
 # ====================================================================================================================================================
 class Button1():
-    """this is used for main menus and user input buttons and not in actual games"""
+    """
+    A class to represent a button that a user can click
+
+    Attributes:
+        root (object): the window object
+        row (int): the row that this button is in
+        column (int): the column that this button is in
+        len (int): the length for the button
+        wid (int): the width for the button
+        txt (str, optinal): the text for the button to display
+        color (str, optinal):
+            the background color for the button to display
+        fg (str, optinal): the text color for the button to display
+        leftClick (function, optinal):
+            the function to call when the button is left clicked
+        Enter (function, optinal):
+            the function to call when the user cursor enters the button
+        Leave (function, optinal):
+            the function to call when the user cursor leaves the button
+
+    Methods:
+        update(): updates the button to match the attributes
+    """
     def __init__(self, root, row, column, len, wid, text=" ", color="white", fg="black", leftClick=None, Enter=None, Leave=None):
-        self.root = root
-        self.row = row
-        self.column = column
-        self.len = len
-        self.width = wid
-        self.txt = text
-        self.color = color
-        self.foreGround = fg
+        self.root, self.row, self.column, self.len = root, row, column, len
+        self.width, self.txt, self.color, self.foreGround = wid, text, color, fg
 
         self.button = Button(
             self.root,
@@ -42,36 +61,53 @@ class Button1():
             fg=self.foreGround
         )
 
+        # Put the button on the window at the column and row that was given
         self.button.grid(row=self.row+1, column=self.column)
         self.button.bind("<Button-1>", leftClick)
         self.button.bind("<Enter>", Enter)
         self.button.bind("<Leave>", Leave)
-    
 
     def update(self):
-        # self.button.grid_remove()
-        # self.button = Button(
-        #     self.root,
-        #     text=self.txt,
-        #     padx=self.len,
-        #     pady=self.width,
-        #     bg=self.color,
-        #     fg=self.foreGround
-        # )
-        # self.button.grid(row=self.row+1, column=self.column)
-        
-        self.button.config(text=self.txt, padx=self.len, pady=self.width, bg=self.color, fg=self.foreGround)
+        """
+        updates the button to match the attributes
 
 
-# ====================================================================================================================================================
+        """
+        self.button.config(
+            text=self.txt,
+            padx=self.len,
+            pady=self.width,
+            bg=self.color,
+            fg=self.foreGround
+        )
+
+
+# =====================================================================
 # Tile for minesweeper games
-# ====================================================================================================================================================
+# =====================================================================
 class Tile(Button1):
     """
-        Used in all games of minesweeper inluding
-          - regular
-          - doubles
-          - tutorial
+    used to represent a tile in a game of minesweeper.
+
+    Attributes:
+        all the attributes that the Button1() class has
+        isBomb (bool): if the tile is a bomb
+        isReveal (bool): if the tile is uncovered
+        isFlaged (bool): if the tile is flaged
+        isAreaCleared (bool):
+            if the tile has already cleared the area around it
+        hover (bool): if the cursor is hovering over this tile
+        numberOfBombsNearby (int): the number of bombs nearby
+        lightTiles (bool): if the tile is a light tile
+
+    Methods:
+        leftClick(event=None): When the user left clicks the tile.
+        rightClick(event=None): When the user right clicks the tile.
+        clearAround(event=None): Clears the tiles around this tile.
+        leftRightClick(event=None):
+            Called when user presses left and right at the same time.
+        highlight(event=None):
+            Highlights and de-highlights tile based on where cursor is.
     """
 
     # color options
@@ -85,19 +121,25 @@ class Tile(Button1):
         "cyan": "#1fdecb",
     }
 
+    def __init__(self, root, row, column, len, wid, text=" ", lightTile=False, bomb=False):
+        """
+        Initializes the button object.
 
-    def __init__(self, root, row, column, len, wid, text=" ", lightTile = False, bomb=False):
+        Args:
+            root (Tk): Window object
+            row (int): the row that the tile it is on
+            column (int): the column that the tile is on
+            len (int): length of the tile
+            wid (int): the width of the tile
+            text (str): the string for the tile to represent
+            light_tile (bool): if the tile is a light tile
+            bomb (bool): if the tile is a bomb
+        """
         super().__init__(root, row, column, len, wid, text)
 
         self.isBomb = bomb
 
-        self.isReveal = False
-
-        self.isFlaged = False
-
-        self.isAreaCleared = False
-
-        self.hover = False
+        self.isReveal = self.isFlaged = self.isAreaCleared = self.hover = False
 
         self.theOne = False
 
@@ -107,33 +149,30 @@ class Tile(Button1):
 
         self.lightTiles = lightTile
 
-        # r = self.row % 2
-        # c = self.column % 2
-
-        # if not self.lightTiles:
-        #     self.color = self.colors["dark green"]
-        #     self.foreGround = self.colors["dark green"]
-        # else:
-        #     self.color = self.colors["light green"]
-        #     self.foreGround = self.colors["light green"]
-
         if self.lightTiles:
             self.color = self.colors["light green"]
             self.foreGround = self.colors["light green"]
         else:
             self.color = self.colors["dark green"]
             self.foreGround = self.colors["dark green"]
-        
+
         self.update()
-        
+
         self.button.bind("<Button-1>", self.leftClick)
         self.button.bind("<Button-3>", self.rightClick)
 
-
     def leftClick(self, event=None):
+        """
+        When the user left clicks the tile.
 
+        Once left clicked, change the color to the brown background
+        color, update the tile, and try to clear the tiles around it
+
+        Args:
+            event (Tk)(optional): Tk event
+        """
         if not self.isFlaged and not self.isBomb and not self.isReveal:
-            
+
             # change tile color based on it's position in checkerboard pattern
             if self.color == self.colors["light green"] or self.color == self.colors["light green highlight"]:
                 self.color = self.colors["light brown"]
@@ -141,7 +180,7 @@ class Tile(Button1):
                 if self.numberOfBombsNearby != 0:
                     self.txt = self.numberOfBombsNearby
                     self.len -= 2
-            
+
             if self.color == self.colors["dark green"] or self.color == self.colors["dark green highlight"]:
                 self.color = self.colors["dark brown"]
                 self.foreGround = "black"
@@ -149,18 +188,17 @@ class Tile(Button1):
                     self.txt = self.numberOfBombsNearby
                     self.len -= 2
 
-
             # updates changes in color to UI
             self.update()
 
             self.isReveal = True
-            
+
             # adds clear around (based on flags) to tile
             self.button.bind("<Button-1><Button-3>", self.leftRightClick)
-            
-            # calls clear around (based on if there are bombs around tile) 
+
+            # calls clear around (based on if there are bombs around tile)
             self.clearAround()
-        
+
         # checks if user clicked on a bomb
         if not self.isFlaged and self.isBomb and not self.isReveal:
             global gameOver
@@ -172,20 +210,30 @@ class Tile(Button1):
                 allTiles[i[0]][i[1]].color = "brown"
                 allTiles[i[0]][i[1]].foreGround = "brown"
                 allTiles[i[0]][i[1]].update()
-            
+
             # binds all Tiles to destory game when clicked
             for i in allTiles:
                 for i1 in i:
                     i1.button.bind("<Button-1>", destoryGame)
 
-
     def rightClick(self, event=None):
+        """
+        When the user right clicks the tile.
+
+        Add or remove the flag from this tile
+
+        Args:
+            event (Tk)(optional): Tk event
+        """
         if not self.isReveal:
 
             # if tile is not flaged
             if not self.isFlaged:
-                
-                # change color to orange, text to "F" and bind appropriate functions
+
+                """
+                change color to orange, text to "F" and bind
+                appropriate functions
+                """
                 self.txt = "F"
                 self.color = "orange"
                 self.len -= 2
@@ -199,7 +247,11 @@ class Tile(Button1):
                 self.button.bind("<Button-3>", self.rightClick)
             else:
 
-                # change length back, set flagged variable to false, change text back, change original color back, bind appropriate functions
+                """
+                change length back, set flagged variable to false,
+                change text back, change original color back,
+                bind appropriate functions
+                """
                 self.len += 2
                 self.isFlaged = False
                 self.txt = " "
@@ -209,10 +261,18 @@ class Tile(Button1):
                     self.color = self.colors["dark green"]
                 self.update()
                 self.button.bind("<Button-1>", self.leftClick)
-                self.button.bind("<Button-3>", self.rightClick) 
-
+                self.button.bind("<Button-3>", self.rightClick)
 
     def clearAround(self, event=None):
+        """
+        Clears the tiles around this tile.
+
+        Checks to see if there are any bombs around this tile and if it
+        is it will go and clear the tiles around itself.
+
+        Args:
+            event (Tk)(optional): Tk event
+        """
         if self.isReveal is True and self.isAreaCleared is False and self.numberOfBombsNearby != 9:
 
             self.isAreaCleared = True
@@ -229,25 +289,34 @@ class Tile(Button1):
                 [self.row + 1, self.column + 1]
             ]
 
-            # removes non-existant tiles
-            for i in locations:
-                if i[0]<0 or i[0]>maxRows-1 or i[1]<0 or i[1]>maxColumns-1:
-                    locations[locations.index(i)] = "_"
+            locations = [i for i in locations if not (i[0] < 0 or
+                         i[0] > maxRows-1 or i[1] < 0 or i[1] > maxColumns-1)]
 
-            # checks if this tile has no bombs around it and clears tiles near it
-            if self.numberOfBombsNearby == 0:
-                for i in locations:
-                    if not i == "_" and not allTiles[i[0]][i[1]].isReveal and not allTiles[i[0]][i[1]].isAreaCleared and not allTiles[i[0]][i[1]].isBomb:
-                        try:
-                            allTiles[i[0]][i[1]].clearAround()
-                            allTiles[i[0]][i[1]].leftClick()
-                        except(RecursionError):
-                            print("recursion")
-                            print(i)
-                self.isAreaCleared = True
-    
+            # checks if this tile has no bombs around it
+            if self.numberOfBombsNearby != 0:
+                return
+
+            for i in locations:
+                t = allTiles[i[0]][i[1]]
+                if not t.isReveal and not t.isAreaCleared and not t.isBomb:
+                    try:
+                        t.clearAround()
+                        t.leftClick()
+                    except (RecursionError):
+                        print("recursion")
+                        print(i)
 
     def leftRightClick(self, event=None):
+        """
+        Called when user presses left and right at the same time.
+
+        Checks to see if all the bombs around this tile (if any) are all
+        flaged and if it is it will go and clear the tiles around
+        itself.
+
+        Args:
+            event (Tk)(optional): Tk event
+        """
         if self.numberOfBombsNearby != 0 and self.isReveal and not self.isFlaged:
 
             # lists co-ordinates of tiles next to this tile
@@ -261,79 +330,77 @@ class Tile(Button1):
                 [self.row, self.column + 1],
                 [self.row + 1, self.column + 1]
             ]
-            
-            # removes non-existant tiles
-            for i in locations:
-                if i[0]<0 or i[0]>maxRows-1 or i[1]<0 or i[1]>maxColumns-1:
-                    locations[locations.index(i)] = "_"
-            
-            # checks that all tiles that are bombs around this tile are flaged
-            checkBombsAreFlaged = True
-            for i in locations:
-                if i != "_":
-                    if allTiles[i[0]][i[1]].isBomb and not allTiles[i[0]][i[1]].isFlaged:
-                        checkBombsAreFlaged = False
-                        break
-            
-            # clears tiles around this tile if all bombs next to this tile are flaged
-            if checkBombsAreFlaged:
-                for i in locations:
-                    # checks if a tile aroudn this tile is a bomb
-                    if i != "_" and not allTiles[i[0]][i[1]].isBomb:
-                        allTiles[i[0]][i[1]].leftClick()
 
+            locations = [i for i in locations if not (i[0] < 0 or
+                         i[0] > maxRows-1 or i[1] < 0 or i[1] > maxColumns-1)]
+
+            # Checks that all tiles that are bombs around this tile are flaged
+            check_flaged = True
+            for i in locations:
+                t = allTiles[i[0]][i[1]]
+                if t.isBomb and not t.isFlaged:
+                    check_flaged = False
+                    break
+
+            # Clears tiles around this tile
+            if check_flaged:
+                # Clear tiles around this tile if they are not a bomb
+                [allTiles[i[0]][i[1]].leftClick()
+                 for i in locations if not allTiles[i[0]][i[1]].isBomb]
 
     def highlight(self, event=None):
         """
-            this is for when the user used WASD and JL to play the game and the user
-            needs to know where their cursor is.
-        """
+        Highlights and de-highlights tile based on where cursor is.
 
-        checkChange = False
+        this is for when the user used WASD and JL to play the game and
+        the userneeds to know where their cursor is.
+
+        Args:
+            event (Tk)(optional): Tk event
+        """
+        change = False
         if self.color == self.colors["dark green"]:
             self.color = self.colors["dark green highlight"]
             self.foreGround = self.colors["dark green highlight"]
-            checkChange = True
+            change = True
 
         if self.color == self.colors["light green"]:
             self.color = self.colors["light green highlight"]
             self.foreGround = self.colors["light green highlight"]
-            checkChange = True
+            change = True
         
-        if self.color == self.colors["dark green highlight"] and not checkChange:
-            self.color = self.colors["dark green"]
-            self.foreGround = self.colors["dark green"]
-        if self.color == self.colors["light green highlight"] and not checkChange:
-            self.color = self.colors["light green"]
-            self.foreGround = self.colors["light green"]
-        
-        if self.color == self.colors["dark brown"] or self.color == self.colors['light brown'] and not checkChange:
-            self.color = self.colors["cyan"]
-            self.foreGround = self.colors["cyan"]
-            if self.numberOfBombsNearby == "0":
-                r = self.row % 2
-                c = self.column % 2
+        if change is False:
+
+            if self.color == self.colors["dark green highlight"]:
+                self.color = self.colors["dark green"]
+                self.foreGround = self.colors["dark green"]
+            if self.color == self.colors["light green highlight"]:
+                self.color = self.colors["light green"]
+                self.foreGround = self.colors["light green"]
+
+            if self.color == self.colors["dark brown"] or self.color == self.colors['light brown']:
+                self.color = self.colors["cyan"]
+                self.foreGround = self.colors["cyan"]
+                if self.numberOfBombsNearby == "0":
+
+                    if not self.lightTiles:
+                        self.foreGround = self.colors["dark green"]
+                    else:
+                        self.foreGround = self.colors["light green"]
+                change = True
+
+            if self.color == self.colors["cyan"]:
 
                 if not self.lightTiles:
-                    self.foreGround = self.colors["dark green"]
+                    self.color = self.colors["dark brown"]
+                    self.foreGround = "black"
+                    if self.numberOfBombsNearby == "0":
+                        self.foreGround = self.colors["dark brown"]
                 else:
-                    self.foreGround = self.colors["light green"]
-            checkChange = True
-        
-        if self.color == self.colors["cyan"] and not checkChange:
-            r = self.row % 2
-            c = self.column % 2
-
-            if not self.lightTiles:
-                self.color = self.colors["dark brown"]
-                self.foreGround = "black"
-                if self.numberOfBombsNearby == "0":
-                    self.foreGround = self.colors["dark brown"]
-            else:
-                self.color = self.colors["light brown"]
-                self.foreGround = "black"
-                if self.numberOfBombsNearby == "0":
-                    self.foreGround = self.colors["light brown"]
+                    self.color = self.colors["light brown"]
+                    self.foreGround = "black"
+                    if self.numberOfBombsNearby == "0":
+                        self.foreGround = self.colors["light brown"]
 
         self.update()
         self.button.bind("<Button-1>", self.leftClick)
@@ -344,8 +411,21 @@ class Tile(Button1):
 # Input boxes with or without buttons to change value
 # ====================================================================================================================================================
 class Inputer():
-    """Input boxes with buttons to select Row Column and Name"""
-    def __init__(self, root, row, column, padx, pady, defaultText, limit, boxes=False):
+    """Input boxes with buttons to select Row Column and Name."""
+
+    def __init__(self, root, row, column, padx, pady,
+                 defaultText, limit, boxes=False):
+        """
+        Initialize inputer class.
+
+        Args:
+            root (tk): the window object
+            row (int): the row you want the input box to be on
+            column (int): the column you want the input box to be on
+            padx (int): the length of the input box
+            pady (int): the hight of the input box
+            defaultText (str): the default text for the input box
+        """
         self.root = root
         self.row = row
         self.column = column
@@ -367,7 +447,7 @@ class Inputer():
             )
 
             self.leftChange5 = Button1(
-                root, 
+                root,
                 row-1, column + 1,
                 12, 0,
                 text="<<",
@@ -407,12 +487,19 @@ class Inputer():
             )
 
         self.update()
-    
+
     def update(self):
+        """Update the text inside the input box."""
         self.entry.delete(0, 100)
         self.entry.insert(-1, str(self.contains))
-    
+
     def changeAmount(self, amount):
+        """
+        Change the amount by an amount.
+
+        Args:
+            amount (int): the amount to change by
+        """
         if self.entry.get().isnumeric():
             test = self.contains + amount
             if test > self.limit:
@@ -456,7 +543,7 @@ class MainScreen(Tk):
         )
 
         self.mainloop()
-    
+
     # user left clicked the double game button
     def leftClickDouble(self, event=None):
         pass
@@ -481,8 +568,10 @@ class MainScreen(Tk):
     def leaveRegular(self, event=None):
         pass
 
+
 def startRegularInputs():
     asdfasdfsdf = InputRegularScreen()
+
 
 def startRegular(row, column, bombs):
     global regularscreen
@@ -499,7 +588,7 @@ def startRegular(row, column, bombs):
 
     maxRows = row
     maxColumns = column
-    
+
     bombsList = []
 
     for i in range(bombs):
@@ -512,7 +601,7 @@ def startRegular(row, column, bombs):
             if [smth1, smth2] not in bombsList:
                 bombsList.append([smth1, smth2])
                 check1 = True
-    
+
     allTiles = []
     bombsNearby = []
 
@@ -533,10 +622,10 @@ def startRegular(row, column, bombs):
             for i2 in locations:
                 if i2 in bombsList:
                     numberOfBombsNearbyForEachTile += 1
-            
+
             mini.append(numberOfBombsNearbyForEachTile)
         bombsNearby.append(mini)
-    
+
     regularscreen = RegularScreen()
     regularscreen.initialize(row, column)
 
@@ -556,9 +645,9 @@ def startRegular(row, column, bombs):
             yFocus = num2
             check2 = -2
         check2 += 1
-        if check2>row*column*10:
+        if check2 > row*column*10:
             break
-    if check2==row*column*10+1:
+    if check2 == row*column*10+1:
         print("not available")
     timer = Timer()
     regularscreen.updateTitle(timer, 5)
@@ -596,7 +685,7 @@ def keyWasPressed(key):
             case "d":
                 print(maxColumns)
                 print(yFocus)
-                if yFocus != maxColumns -1:
+                if yFocus != maxColumns - 1:
                     yFocus += 1
                 else:
                     print("rows aborted")
@@ -612,10 +701,10 @@ def keyWasPressed(key):
             allTiles[xFocus][yFocus].highlight()
             allTiles[xPrev][yPrev].highlight()
 
-print("hello world")
 
 def destoryGame(event=None):
     regularscreen.destroy()
+
 
 class InputRegularScreen(Tk):
     def __init__(self, *args, **kwargs):
@@ -625,7 +714,7 @@ class InputRegularScreen(Tk):
         self.bombs = Inputer(self, 2, 0, 0, 0, 20, 100, True)
         self.go = Button1(self, 3, 3, 10, 10, "!begin!", leftClick=self.continueToGame)
         self.mainloop()
-    
+
     def continueToGame(self, event=None):
         rows = self.rows.entry.get()
         columns = self.columns.entry.get()
@@ -641,6 +730,7 @@ class InputRegularScreen(Tk):
             if rows * columns * 0.1 <= bombs:
                 startRegular(rows, columns, bombs)
 
+
 class RegularScreen(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
@@ -648,7 +738,6 @@ class RegularScreen(Tk):
         self.bind("space", self.spacePressed)
         self.resizable(False, False)
         self.protocol("WM_DELETE_WINDOW", self.windowCloseEvent)
-
 
     def initialize(self, row, column, event=None):
         for i in range(row):
@@ -658,25 +747,21 @@ class RegularScreen(Tk):
                 if (i % 2 == 0 and i1 % 2 == 0) or (i % 2 == 1 and i1 % 2 == 1):
                     light = False
                 if [i, i1] in bombsList:
-                    newTile = Tile(self, i, i1, 9, 4, text="9", lightTile = light, bomb=True)
+                    newTile = Tile(self, i, i1, 9, 4, text="9", lightTile=light, bomb=True)
                     mini.append(newTile)
                 else:
-                    newTile = Tile(self, i, i1, 9, 4, text=str(bombsNearby[i][i1]), lightTile = light,)
+                    newTile = Tile(self, i, i1, 9, 4, text=str(bombsNearby[i][i1]), lightTile=light,)
                     mini.append(newTile)
             allTiles.append(mini)
 
-
     def keyPressed(self, event):
         keyWasPressed(event.char)
-    
 
     def spacePressed(self, event=None):
         keyWasPressed("space")
-    
 
     def tabSpacePressed(self, event=None):
         keyWasPressed("tabspace")
-    
 
     def updateTitle(self, timerObj, num):
 
@@ -685,7 +770,7 @@ class RegularScreen(Tk):
             for i1 in i:
                 if i1.isFlaged:
                     flags -= 1
-        
+
         if num == 5:
             timerObj.changeTime()
             num = 0
@@ -693,7 +778,6 @@ class RegularScreen(Tk):
 
         self.title(timerObj.returnTime()+"  |  "+str(flags)+" flags")
         self.after(200, self.updateTitle, timerObj, num)
-    
 
     def checkWin(self, event=None):
         checkWin = True
@@ -712,7 +796,6 @@ class RegularScreen(Tk):
                         i1.button.bind("<Button-1>", destoryGame)
         else:
             self.after(100, self.checkWin)
-    
 
     def windowCloseEvent(self, event=None):
         check = False
@@ -723,13 +806,12 @@ class RegularScreen(Tk):
 
         if allTiles[bombsList[0][0]][bombsList[0][1]].color == "brown":
             check = False
-        
+
         if check:
             if messagebox.askokcancel("you sure?", "you are not finished this game\nare you sure you would like to exit"):
                 self.destroy()
         else:
             self.destroy()
-
 
 
 class Timer():
@@ -750,7 +832,7 @@ class Timer():
             self.minutes = 0
 
         return self.returnTime()
-    
+
     def returnTime(self):
         seconds = self.seconds
         if self.seconds < 10:
@@ -762,7 +844,7 @@ class Timer():
         if self.hours < 10:
             hours = str("0" + str(self.hours))
         return str(str(hours) + ":" + str(minutes) + ":" + str(seconds))
-    
+
     def pauseTimer(self):
         self.timeron = False
 
