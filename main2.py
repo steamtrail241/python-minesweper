@@ -44,6 +44,7 @@ class Button1():
             the function to call when the user cursor enters the button
         Leave (function, optinal):
             the function to call when the user cursor leaves the button
+        button (Tk.Button): the button object
 
     Methods:
         update(): updates the button to match the attributes
@@ -411,7 +412,30 @@ class Tile(Button1):
 # Input boxes with or without buttons to change value
 # ====================================================================================================================================================
 class Inputer():
-    """Input boxes with buttons to select Row Column and Name."""
+    """
+    Input boxes with buttons to select Row Column and Name.
+
+    Attributes:
+        root (Tk): the window object
+        row (int): the row that this button is in
+        column (int): the column that this button is in
+        x (int): the length for the button
+        y (int): the width for the button
+        contains (int): the text that the input should contain
+        limit (int): the limit for the input to go to
+        entry (Tk.ENTRY): the input box
+        leftChange10 (Tk.Button): the button to change by -10
+        LeftChange5 (Tk.Button): the button to change by -5
+        leftChange1 (Tk.Button): the button to change by -1
+        rightChange1 (Tk.Button): the button to change by 1
+        rightChange5 (Tk.Button): the button to change by 5
+        rightChange10 (Tk.Button): the button to change by 10
+
+    Methods:
+        update(): Update the text inside the input box.
+        changeAmount(amount): Change the input box by an amount.
+
+    """
 
     def __init__(self, root, row, column, padx, pady,
                  defaultText, limit, boxes=False):
@@ -516,7 +540,30 @@ class Inputer():
 
 
 class MainScreen(Tk):
+    """
+    The main input screen.
+
+    Attributes:
+        doublesButton (Button1 class): button to start doubles mode
+        regularButton (Button1 class): button to start regular mode
+
+    Methods:
+        leftClickDouble (event=None): Docstring
+        enterDouble (event=None): Docstring
+        leaveDouble (event=None): Docstring
+        leftClickRegular (event=None): When regular game button is clicked
+        enterRegular (event=None): Docstring
+        leaveRegular (event=None): Docstring
+    """
+
     def __init__(self, *args, **kwargs):
+        """
+        Initalize the mainscreen window.
+
+        Attributes:
+            doublesButton (Button1 class): button to start doubles mode
+            regularButton (Button1 class): button to start regular mode
+        """
         Tk.__init__(self, *args, **kwargs)
 
         # creates a button to start doubles game
@@ -546,34 +593,44 @@ class MainScreen(Tk):
 
     # user left clicked the double game button
     def leftClickDouble(self, event=None):
+        """Docstring."""
         pass
 
     # mouse entered the double game button
     def enterDouble(self, event=None):
+        """Docstring."""
         pass
 
     # mouse left the double game button
     def leaveDouble(self, even=None):
+        """Docstring."""
         pass
 
     # user left clicked the regular game button
     def leftClickRegular(self, event=None):
-        startRegularInputs()
+        """the function for regual game mode"""
+        asdfasdfsdf = InputRegularScreen()
 
     # mouse entered the regular game button
     def enterRegular(self, event=None):
+        """Docstring."""
         pass
 
     # mouse left the regular game button
     def leaveRegular(self, event=None):
+        """Docstring."""
         pass
 
 
-def startRegularInputs():
-    asdfasdfsdf = InputRegularScreen()
-
-
 def startRegular(row, column, bombs):
+    """
+    Start the regular game mode.
+
+    Makes a list of bombs based on the bombs input. Then calculate how
+    many bombs are neaby each tile. Then initialize the regual game
+    window and add the buttons to. Then find a random tile to turn blue
+    representing a safe tile to begin the game.
+    """
     global regularscreen
     global bombsList
     global bombsNearby
@@ -662,12 +719,13 @@ def keyWasPressed(key):
     yPrev = yFocus
     checkClear = False
     if not gameOver:
+        said_tile = allTiles[xFocus][yFocus]
         match(key):
             case "j":
-                allTiles[xFocus][yFocus].leftClick()
-                allTiles[xFocus][yFocus].color = allTiles[xFocus][yFocus].colors["cyan"]
-                allTiles[xFocus][yFocus].foreGround = "black"
-                allTiles[xFocus][yFocus].update()
+                said_tile.leftClick()
+                said_tile.color = said_tile.colors["cyan"]
+                said_tile.foreGround = "black"
+                said_tile.update()
                 checkClear = True
             case "w":
                 if xFocus != 0:
@@ -690,15 +748,15 @@ def keyWasPressed(key):
                 else:
                     print("rows aborted")
             case "l":
-                allTiles[xFocus][yFocus].rightClick()
+                said_tile.rightClick()
             case "space":
-                allTiles[xFocus][yFocus].leftRightClick()
+                said_tile.leftRightClick()
                 checkClear = True
             case other:
                 pass
 
         if not checkClear:
-            allTiles[xFocus][yFocus].highlight()
+            said_tile.highlight()
             allTiles[xPrev][yPrev].highlight()
 
 
